@@ -105,7 +105,7 @@ def main():
         
     
     llm = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.7)
-    memory = ConversationBufferMemory(memory_key="chat_history")
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     chat_prompt = get_chat_prompt(st.session_state.messages)
     chain = LLMChain(llm=llm, prompt=chat_prompt, memory = memory)
 
