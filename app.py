@@ -15,6 +15,7 @@ from langchain.agents import Tool
 from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
+from langchain.chains import ConversationChain
 
 from langchain import LLMChain
 from langchain.agents import Tool, AgentExecutor
@@ -24,6 +25,9 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+
+from langchain.schema.messages import AIMessage, HumanMessage
+
 
 from langchain import PromptTemplate
 load_dotenv()
@@ -35,7 +39,7 @@ def local_css(file_name):
 local_css("style.css")
 
 
-def get_chat_prompt(chat_history):
+def get_chat_prompt():
 
     template= """
 
@@ -48,38 +52,14 @@ def get_chat_prompt(chat_history):
     In whichever language user ask question reply in same language.
     For example if user language is hinglish. reply in hinglish.
     {chat_history}
-
     """
 
     system_message_prompt = SystemMessagePromptTemplate.from_template(template)
-    human_template="{query}"
+    human_template="{input}"
     human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+    messagee_place_holder = MessagesPlaceholder(variable_name="chat_history")
+    return ChatPromptTemplate.from_messages([system_message_prompt,messagee_place_holder, human_message_prompt])
 
-    return ChatPromptTemplate.from_messages([system_message_prompt,human_message_prompt])
-
-
-with st.sidebar:
-    st.title('🌐 Welcome to Your Financial Ally! 🌐')
-    st.markdown('''
-                ### Hello there! 
-                I am your dedicated financial advisor chatbot,
-                meticulously designed to be your go-to guide in the intricate world
-                of finance. 
-                ### My mission? 
-                To assist and empower you on your financial journey,
-                making every step towards your goals a well-informed and confident one.
-                ''')
-    st.markdown('''
-            ### About
-            This app is an LLM-powered chatbot built using:
-            - [Streamlit](https://streamlit.io/)
-            - [LangChain](https://python.langchain.com/)
-            - [OpenAI](https://platform.openai.com/docs/models) LLM model
-            ''')
-
-    st.markdown('''
-            ### Developed by [Nishant Singh Parihar](https://nishantparihar.github.io/)
-            ''')
 
 
 def main():
@@ -93,6 +73,8 @@ def main():
     # Initialize Streamlit chat UI
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
 
     def user(query):
@@ -102,12 +84,6 @@ def main():
         message_placeholder.markdown('Bot 🤖:   ' + response)
 
     
-        
-    
-    llm = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.7)
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    chat_prompt = get_chat_prompt(st.session_state.messages)
-    chain = LLMChain(llm=llm, prompt=chat_prompt, memory = memory)
 
 
 
@@ -139,7 +115,14 @@ def main():
     if submit:
 
         st.session_state.messages.append({"role": "human", "content": query})
+        llm = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.7)
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        chat_prompt = get_chat_prompt()
+        chain = ConversationChain(llm=llm, prompt=chat_prompt, memory = memory)
         
+        for chat in st.session_state.chat_history:
+            memory.save_context({"input": chat["input"]}, {"output": chat["output"]})
+        # memory.save_context({"input": "hi"}, {"output": "whats up"})
 
         user(query)
     
@@ -152,9 +135,34 @@ def main():
         bot(response)
 
         st.session_state.messages.append({"role": "ai", "content": response})
+        st.session_state.chat_history.append({"input": query, "output": response})
+        # memory.save_context({"input": "hi"}, {"output": "whats up"})
 
 
 
+
+with st.sidebar:
+    st.title('🌐 Welcome to Your Financial Ally! 🌐')
+    st.markdown('''
+                ### Hello there! 
+                I am your dedicated financial advisor chatbot,
+                meticulously designed to be your go-to guide in the intricate world
+                of finance. 
+                ### My mission? 
+                To assist and empower you on your financial journey,
+                making every step towards your goals a well-informed and confident one.
+                ''')
+    st.markdown('''
+            ### About
+            This app is an LLM-powered chatbot built using:
+            - [Streamlit](https://streamlit.io/)
+            - [LangChain](https://python.langchain.com/)
+            - [OpenAI](https://platform.openai.com/docs/models) LLM model
+            ''')
+
+    st.markdown('''
+            ### Developed by [Nishant Singh Parihar](https://nishantparihar.github.io/)
+            ''')
          
 
 if __name__ == '__main__':
