@@ -26,7 +26,6 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
 )
 
-from langchain.schema.messages import AIMessage, HumanMessage
 
 
 from langchain import PromptTemplate
