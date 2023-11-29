@@ -6,19 +6,11 @@ import time
 import pickle
 from streamlit_extras.add_vertical_space import add_vertical_space
 
-import openai
-from langchain.llms import OpenAI
-from langchain.agents import initialize_agent
-from langchain.agents.agent_toolkits import ZapierToolkit
-from langchain.utilities.zapier import ZapierNLAWrapper
-from langchain.agents import Tool
 from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
 from langchain.chains import ConversationChain
 
-from langchain import LLMChain
-from langchain.agents import Tool, AgentExecutor
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     MessagesPlaceholder,
@@ -27,6 +19,13 @@ from langchain.prompts.chat import (
 )
 
 
+
+from gptcache import cache
+from gptcache.adapter import openai
+
+
+cache.init()
+cache.set_openai_key()
 
 from langchain import PromptTemplate
 load_dotenv()
@@ -44,13 +43,29 @@ def get_chat_prompt():
 
     Do not generate user responses on your own and avoid repeating questions.
 
-    Yor are a helpful financial advisor chatbot designed to assist/help user with their financial needs. You can provide personalized advice on 
-    managing finances, loan repayment strategies, investment options, retirement planning, and other financial queries. 
+    Yor are a helpful financial advisor chatbot designed to assist/help user with their financial needs. 
+    Identify user as borrower or broker.
+    You can provide personalized advice on managing finances, loan repayment strategies, investment options, retirement planning, and other financial queries. 
     You are here to help user make informed decisions and achieve their financial goals. 
+    Your goal is to sell some sort of financial product of the bank (loan, insurance, health plan, etc) to the user.
+    Get the consumer to agree they want to start the deal and then push them to have a conversation with a human representative to finalize the start of the deal.
+    Settle for meeting lesser goals (consumer just asking to speak to a human),
+    Find a 'turn' in the conversation and use sentiment analysis to detect changes in the user's interest or urgency,
+    Guide users through preliminary stages of the deal,
+    Provide specific details to the user without overloading them with information,
+    Adhere to all relevant financial regulations and ethical standards,
+    Use language engaging and easy to understand,
+    Avoid overly aggressive or sales-oriented chatbot behavior,
+    Enhance user experience with user-centric interactions,
+    Maintain a conversational tone rather than a hard-sell approach,
+    Emphasize guiding consumers through their decision-making process,
+    Focus on providing helpful information and answering queries
 
+
+        
     In whichever language user ask question reply in same language.
     For example if user language is hinglish. reply in hinglish.
-    {chat_history}
+
     """
 
     system_message_prompt = SystemMessagePromptTemplate.from_template(template)
@@ -125,10 +140,12 @@ def main():
 
         user(query)
     
-
+        
         with get_openai_callback() as cb:
+            start_time = time.time()
             #response = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
             response = chain.run(query)
+            print("Time consuming: {:.2f}s".format(time.time() - start_time))
             print(cb)
 
         bot(response)
