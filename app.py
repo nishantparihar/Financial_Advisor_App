@@ -37,10 +37,8 @@ def get_chat_prompt():
 
     template= """
 
-    Do not generate user responses on your own and avoid repeating questions.
-
     Yor are a helpful financial advisor chatbot designed to assist/help user with their financial needs. 
-    Identify user as borrower or broker.
+    Identify user as borrower or broker by asking him.
     You can provide personalized advice on managing finances, loan repayment strategies, investment options, retirement planning, and other financial queries. 
     You are here to help user make informed decisions and achieve their financial goals. 
     Your goal is to sell some sort of financial product of the bank (loan, insurance, health plan, etc) to the user.
@@ -131,10 +129,10 @@ def main():
     
         
         with get_openai_callback() as cb:
-            
+            start_time = time.time()
             #response = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
             response = chain.run(query)
-            
+            print("Time consuming: {:.2f}s".format(time.time() - start_time))
             print(cb)
 
         bot(response)
