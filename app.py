@@ -1,10 +1,7 @@
 import streamlit as st
-import os
 from dotenv import load_dotenv
 import time
 
-import pickle
-from streamlit_extras.add_vertical_space import add_vertical_space
 
 from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
@@ -21,7 +18,6 @@ from langchain.prompts.chat import (
 
 
 from gptcache import cache
-from gptcache.adapter import openai
 
 
 cache.init()
@@ -103,14 +99,7 @@ def main():
 
 
     with st.form('chat_input_form'):
-        # Create two columns; adjust the ratio to your liking
-        # col1, col2 = st.columns([7,1]) 
-
-        # Use the first column for text input
-        # with col1:
         query = st.text_input( "Ask your query:", placeholder= "Ask your query:", label_visibility='collapsed')
-        # Use the second column for the submit button
-        # with col2:
         submit = st.form_submit_button("Submit")
 
 
@@ -142,10 +131,10 @@ def main():
     
         
         with get_openai_callback() as cb:
-            start_time = time.time()
+            
             #response = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
             response = chain.run(query)
-            print("Time consuming: {:.2f}s".format(time.time() - start_time))
+            
             print(cb)
 
         bot(response)
