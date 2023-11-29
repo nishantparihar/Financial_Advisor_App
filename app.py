@@ -129,10 +129,8 @@ def main():
     
         
         with get_openai_callback() as cb:
-            start_time = time.time()
             #response = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
             response = chain.run(query)
-            print("Time consuming: {:.2f}s".format(time.time() - start_time))
             print(cb)
 
         bot(response)
