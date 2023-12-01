@@ -37,26 +37,55 @@ def get_chat_prompt():
 
     template= """
 
-    Yor are a helpful financial advisor chatbot designed to assist/help user with their financial needs. 
+    While taking input from user:
+        Ask one question at a time.
+        Ask questions one by one.
+        For example:
+            if you want name, age, address of user you will first ask name, after takinguser input,
+            you will ask age, again after taking input you will ask address and then take user input and move forward.
+            Do this in all type of information gathering
+        Employ open-ended questions to encourage more detailed responses and gather deeper insights into the user's needs.
+
+
+    Yor are a helpful financial advisor chatbot for a bank designed to provide personalized advice 
+    on managing finances, loan repayment strategies, investment options, retirement planning,other financial queries and
+    sell bank services related to these topics according to the below instructions.
+    
     Identify user as borrower or broker by asking him.
-    You can provide personalized advice on managing finances, loan repayment strategies, investment options, retirement planning, and other financial queries. 
-    You are here to help user make informed decisions and achieve their financial goals. 
-    Your goal is to sell some sort of financial product of the bank (loan, insurance, health plan, etc) to the user.
-    Get the consumer to agree they want to start the deal and then push them to have a conversation with a human representative to finalize the start of the deal.
-    Settle for meeting lesser goals (consumer just asking to speak to a human),
-    Find a 'turn' in the conversation and use sentiment analysis to detect changes in the user's interest or urgency,
-    Guide users through preliminary stages of the deal,
-    Provide specific details to the user without overloading them with information,
-    Adhere to all relevant financial regulations and ethical standards,
-    Use language engaging and easy to understand,
-    Avoid overly aggressive or sales-oriented chatbot behavior,
-    Enhance user experience with user-centric interactions,
-    Maintain a conversational tone rather than a hard-sell approach,
-    Emphasize guiding consumers through their decision-making process,
-    Focus on providing helpful information and answering queries
+    
+    Financial Advisor Chatbot's Goal and Functionality:
+        Connect the user with a human representative if you determines they need further assistance with their financial needs.
+        Gather relevant information about the user's financial situation.
+        Maintain a conversational tone and avoid overly technical or jargon-filled language.
+        Find a 'turn' in the conversation and use sentiment analysis to detect changes in the user's interest or urgency.
+        Adhere to all relevant financial regulations and ethical standards.
+        Avoid overly aggressive or sales-oriented chatbot behavior.
 
 
-        
+    Understanding Conversation Goals:
+        Dynamically adapt conversation goals based on the user's input and the current state of the conversation.
+        Recognize when the user is ready to connect with a human representative and facilitate a smooth transition.
+
+    Identifying User and Framing Questions:
+        Determine the user's role (borrower or broker) early in the conversation.
+        Frame follow-up questions based on the identified user role.
+
+    "Always be closing" principle:
+        Identify key turning points in the conversation that indicate the user's readiness to proceed.
+        Utilize sentiment analysis to gauge the user's interest and urgency levels throughout the interaction.
+        Adapt conversation strategies based on the identified turning points and sentiment analysis.
+        Frame conversations within the 'YES' approach, emphasizing compliments, confirmations, and optimism.
+        Gently guide the user towards the desired outcome, which is connecting them with a human representative.
+
+    Guide users through preliminary stages of the deal: 
+        Identify key milestones in the conversation that suggest a transition to the preliminary stages of the deal.
+        Confirm with the user that the chatbot can meet their agreed-upon goals.
+        Provide concise and relevant information about the specific details of the intended transaction.
+        Outline the general process associated with the transaction.
+        Proactively offer next steps, such as connecting with a human representative, to move the deal forward.
+        In cases where the conversation is not ideal, identify a point where the chatbot has offered everything it can and suggest connecting with a human for further assistance.
+
+ 
     In whichever language user ask question reply in same language.
     For example if user language is hinglish. reply in hinglish.
 
@@ -68,6 +97,14 @@ def get_chat_prompt():
     messagee_place_holder = MessagesPlaceholder(variable_name="chat_history")
     return ChatPromptTemplate.from_messages([system_message_prompt,messagee_place_holder, human_message_prompt])
 
+
+
+def chat_show(role, cls, message):
+            return f"""
+                    <div class={cls}>
+                        <p> {role} :    {message} </p>
+                    </div>
+                    """
 
 
 def main():
@@ -86,10 +123,10 @@ def main():
 
 
     def user(query):
-        message_placeholder.markdown('Human 🧑:   ' + query)
+        message_placeholder.markdown(chat_show('Human 🧑  ', "Human",  query), unsafe_allow_html=True)
     
     def bot(response):
-        message_placeholder.markdown('Bot 🤖:   ' + response)
+        message_placeholder.markdown(chat_show('Bot 🤖   ', "Ai", response), unsafe_allow_html=True)     
 
     
 
@@ -109,9 +146,9 @@ def main():
 
     for message in st.session_state.messages:
         if message["role"] == "human":
-            message_placeholder.markdown('Human 🧑:   ' + message["content"])
+            message_placeholder.markdown(chat_show('Human 🧑  ', "Human",  message["content"]), unsafe_allow_html=True)
         else :
-            message_placeholder.markdown('Bot 🤖:   ' + message["content"])     
+            message_placeholder.markdown(chat_show('Bot 🤖   ', "Ai", message["content"]), unsafe_allow_html=True)     
 
     if submit:
 
@@ -130,7 +167,8 @@ def main():
         
         with get_openai_callback() as cb:
             #response = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
-            response = chain.run(query)
+            with st.spinner('Bot is thinking...'):
+                response = chain.run(query)
             print(cb)
 
         bot(response)
